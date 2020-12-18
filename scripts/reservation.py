@@ -33,7 +33,9 @@ def send_mail(msg=None):
     s.starttls()
 
     # Authentication
-    s.login("meetsheth2311@gmail.com", "incorret2311")
+    id = "abc@gmail.com"
+    password = "12345678"
+    s.login(id, password)
 
     # sending the mail
 
