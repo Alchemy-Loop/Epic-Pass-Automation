@@ -5,49 +5,15 @@ from pytz import timezone
 from calendar import monthrange
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import config
+
 DELAY = 10
 
-def send_mail(msg=None):
-    messsage = MIMEMultipart()
-    email = 'meets@dosepack.com'
-    verify_url = 'http://verify.example.com'
-    messsage['From'] = 'meetsheth2311@gmail.com'
-    messsage['To'] = email
-    messsage['Subject'] = 'MEM Correction Verification'
-    if not msg:
-        msg = """ Need MEM Correction for Yesterday
-        """
-    messsage.attach(MIMEText(msg, 'plain'))
-
-    # creates SMTP session
-    s = smtplib.SMTP('smtp.gmail.com', 587)
-
-    # start TLS for security
-    s.starttls()
-
-    # Authentication
-    id = "abc@gmail.com"
-    password = "12345678"
-    s.login(id, password)
-
-    # sending the mail
-
-    s.sendmail(messsage['From'], email, messsage.as_string())
-
-    # terminating the session
-
-    s.quit()
-
-    return True
 
 def get_non_reserved_dates():
     """
@@ -58,7 +24,7 @@ def get_non_reserved_dates():
 
     :return: List of non reserved dates object
     """
-    wait_for_page_load('passholder_reservations__calendar__day','class')
+    wait_for_page_load('passholder_reservations__calendar__day', 'class')
 
     date_all = driver.find_elements_by_class_name('passholder_reservations__calendar__day')
     date_dis = driver.find_elements_by_class_name('passholder_reservations__calendar__day--disabled')
@@ -68,28 +34,32 @@ def get_non_reserved_dates():
     print(non_reserved_dates)
     return non_reserved_dates
 
-def open_web_link(web_link,browser=False):
+
+def open_web_link(web_link, browser=False):
     """
     This function open link passed in argument.
-    :param web_link:
+    :param web_link: The link the driver will fetch
+    :param browser: To run headless or with browser
     :return: This function will return driver object for further use
     """
     global driver
     option = Options()
     option.add_argument("--headless")
+    option.add_argument("--no-sandbox")
+    option.add_argument("--disable-dev-sh-usage")
+
     # option.add_argument("window-size=1200x600")
     if browser:
         # This will open browser.
         driver = webdriver.Chrome(ChromeDriverManager().install())
     else:
         # If we want to hide browser then need to add option object with --headless in below argument.
-        driver = webdriver.Chrome(ChromeDriverManager().install(),options=option)
+        driver = webdriver.Chrome(ChromeDriverManager().install(), options=option)
     driver.get(web_link)
     return driver
 
 
-
-def login_to_portal(user_id,password):
+def login_to_portal(user_id, password):
     """
     This function is for user's login functionality.
     First enter email_id/User id
@@ -97,7 +67,7 @@ def login_to_portal(user_id,password):
     Enter
     :return:
     """
-    wait_for_page_load('txtUserName_3','id',15)
+    wait_for_page_load('txtUserName_3', 'id', 15)
     sleep(1)
 
     username_box = driver.find_element_by_id('txtUserName_3')
@@ -110,6 +80,7 @@ def login_to_portal(user_id,password):
 
     password_box.send_keys(Keys.RETURN)
 
+
 def get_resort_availability_calendar(resort_name):
     """
     This function will open calendar of current month for resort passed in argument.
@@ -119,12 +90,13 @@ def get_resort_availability_calendar(resort_name):
     wait_for_page_load('//*[@id="PassHolderReservationComponent_Resort_Selection"]', 'xpath')
     # TODO : Need to fetch resort name and id from config file.
     # Here option[10] if for heavenly resort. Need to make it parameterized.
-    park_city = driver.find_element_by_xpath('//*[@id="PassHolderReservationComponent_Resort_Selection"]/option['+ str(config.RESORT_ID_DICT[resort_name]) + ']')
+    park_city = driver.find_element_by_xpath('//*[@id="PassHolderReservationComponent_Resort_Selection"]/option[' + str(config.RESORT_ID_DICT[resort_name]) + ']')
     park_city.click()
 
     # Here we will click check availability button.
     check_avail = driver.find_element_by_xpath('//*[@id="passHolderReservationsSearchButton"]')
     check_avail.click()
+
 
 def change_calendar_to_next_month():
     """
@@ -148,19 +120,20 @@ def get_next_n_days_for_current_month(no_of_days):
     _, total_days = monthrange(int(year), int(month))
     # from getting total days of the month we will find next n days.
     next_days_from_today = [int(current_date.split('-')[-1]) + i for i in range(no_of_days) if
-                                  int(current_date.split('-')[-1]) + i < total_days]
+                            int(current_date.split('-')[-1]) + i < total_days]
 
     # This condition is to tackle up month change condition.
     # TODO: Need to test the code and can change implementation .
     if len(next_days_from_today) < no_of_days:
         change_calendar_to_next_month()
         sleep(5)
-        non_reserved_dates.extend(get_non_reserved_dates())
+        non_reserved_dates.extend(get_non_reserved_dates())  # TODO: Error in this
         for i in range(1, config.NEXT_NO_OF_DAYS + 1 - len(next_days_from_today)):
             next_days_from_today.append(i)
     return next_days_from_today
 
-def book_for_the_date(date_obj,date):
+
+def book_for_the_date(date_obj, date):
     """
     This function will return status of booked or not for a given particular date.
 
@@ -171,7 +144,7 @@ def book_for_the_date(date_obj,date):
     # Click on that date in calander.
     driver.execute_script("arguments[0].click();", date_obj)
 
-    wait_for_page_load('passholder_reservations__assign_passholder_modal__name','class')
+    wait_for_page_load('passholder_reservations__assign_passholder_modal__name', 'class')
     # sleep(5)
     # Fetch all persons class
     person_selector = driver.find_elements_by_class_name('passholder_reservations__assign_passholder_modal__name')
@@ -181,7 +154,6 @@ def book_for_the_date(date_obj,date):
         if person.text in config.PERSONS_LIST:
             person.click()
 
-
     try:
         # After selecting all persons, click on submit button.
         x = driver.find_element_by_xpath(
@@ -189,7 +161,7 @@ def book_for_the_date(date_obj,date):
         driver.execute_script("arguments[0].click();", x)
 
         # If there is already done then close the pop up else return True where it can't find Error element.
-        wait_for_page_load('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/ul/li[3]/span/label/h4/i','xpath',delay=2)
+        wait_for_page_load('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/ul/li[3]/span/label/h4/i', 'xpath', delay=2)
         driver.find_element_by_xpath('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/ul/li[3]/span/label/h4/i')
     except Exception as e:
         print("Available on " + str(date_obj.text))
@@ -198,7 +170,8 @@ def book_for_the_date(date_obj,date):
     driver.execute_script("arguments[0].click();", close)
     return False
 
-def wait_for_page_load(element_to_check,parameter,delay=DELAY):
+
+def wait_for_page_load(element_to_check, parameter, delay=DELAY):
     """
 
     :param element_to_check:
@@ -222,8 +195,6 @@ def wait_for_page_load(element_to_check,parameter,delay=DELAY):
         print("Internet Delay")
 
 
-
-
 def main():
     """
     ------------------------------------------------------
@@ -237,9 +208,9 @@ def main():
     user = config.EMAIL_ID
     password = config.PASSWORD
 
-    driver = open_web_link(web_link=config.WEB_LINK,browser=True)
+    driver = open_web_link(web_link=config.WEB_LINK, browser=True)
 
-    login_to_portal(user_id=user,password=password)
+    login_to_portal(user_id=user, password=password)
 
     # For Each mountain resort we will book pass for given days.
     for resort in config.RESORT_LIST:
@@ -254,14 +225,14 @@ def main():
         for i in non_reserved_dates:
             cal_date = int(i.text)
             if cal_date in next_days_from_today:
-                status = book_for_the_date(i,cal_date)
+                status = book_for_the_date(i, cal_date)
                 if status:
                     # save the booked days
                     # TODO : Implement proper DS to store info.
                     booked_days.append(cal_date)
 
         try:
-            wait_for_page_load('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[2]/div[2]/div[2]','xpath',delay=2)
+            wait_for_page_load('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[2]/div[2]/div[2]', 'xpath', delay=2)
 
             # This will tick the terms & conditions button.
             tnc = driver.find_element_by_xpath('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[2]/div[2]/div[2]')
