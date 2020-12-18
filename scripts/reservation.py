@@ -108,9 +108,6 @@ def login_to_portal(user_id,password):
     print("Password entered")
 
     password_box.send_keys(Keys.RETURN)
-    delay = 10
-    element_present = EC.presence_of_element_located((By.XPATH, '//*[@id="PassHolderReservationComponent_Resort_Selection"]/option[10]'))
-    WebDriverWait(driver, delay).until(element_present)
 
 def get_resort_availability_calendar(resort_name):
     """
