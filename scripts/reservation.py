@@ -98,6 +98,7 @@ def login_to_portal(user_id,password):
     :return:
     """
     wait_for_page_load('txtUserName_3','id',15)
+    sleep(1)
 
     username_box = driver.find_element_by_id('txtUserName_3')
     username_box.send_keys(user_id)
@@ -118,7 +119,7 @@ def get_resort_availability_calendar(resort_name):
     wait_for_page_load('//*[@id="PassHolderReservationComponent_Resort_Selection"]', 'xpath')
     # TODO : Need to fetch resort name and id from config file.
     # Here option[10] if for heavenly resort. Need to make it parameterized.
-    park_city = driver.find_element_by_xpath('//*[@id="PassHolderReservationComponent_Resort_Selection"]/option[10]')
+    park_city = driver.find_element_by_xpath('//*[@id="PassHolderReservationComponent_Resort_Selection"]/option['+ str(config.RESORT_ID_DICT[resort_name]) + ']')
     park_city.click()
 
     # Here we will click check availability button.
@@ -180,11 +181,13 @@ def book_for_the_date(date_obj,date):
         if person.text in config.PERSONS_LIST:
             person.click()
 
-    # After selecting all persons, click on submit button.
-    x = driver.find_element_by_xpath(
-        '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/div[3]/button[2]')
-    driver.execute_script("arguments[0].click();", x)
+
     try:
+        # After selecting all persons, click on submit button.
+        x = driver.find_element_by_xpath(
+            '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/div[3]/button[2]')
+        driver.execute_script("arguments[0].click();", x)
+
         # If there is already done then close the pop up else return True where it can't find Error element.
         wait_for_page_load('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/ul/li[3]/span/label/h4/i','xpath',delay=2)
         driver.find_element_by_xpath('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/ul/li[3]/span/label/h4/i')
@@ -234,14 +237,9 @@ def main():
     user = config.EMAIL_ID
     password = config.PASSWORD
 
-
     driver = open_web_link(web_link=config.WEB_LINK,browser=True)
 
-    # sleep(10)
-
     login_to_portal(user_id=user,password=password)
-
-    # sleep(10)
 
     # For Each mountain resort we will book pass for given days.
     for resort in config.RESORT_LIST:
