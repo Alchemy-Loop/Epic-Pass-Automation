@@ -1,0 +1,4 @@
+selenium==3.141.0
+webdriver-manager==3.2.2
+secure-smtplib==0.1.1
+pytz==2020.4
