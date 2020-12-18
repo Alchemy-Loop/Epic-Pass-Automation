@@ -7,18 +7,18 @@ import time
 
 def send_mail(msg=None):
     message = MIMEMultipart()
-    email = '#'
-    verify_url = 'http://verify.example.com'
-    message['From'] = '#'
-    message['To'] = email
-    message['Subject'] = 'MEM Correction Verification'
+    email = "#"
+    verify_url = "http://verify.example.com"
+    message["From"] = "#"
+    message["To"] = email
+    message["Subject"] = "MEM Correction Verification"
     if not msg:
         msg = """ Need MEM Correction for Yesterday
         """
-    message.attach(MIMEText(msg, 'plain'))
+    message.attach(MIMEText(msg, "plain"))
 
     # creates SMTP session
-    s = smtplib.SMTP('smtp.gmail.com', 587)
+    s = smtplib.SMTP("smtp.gmail.com", 587)
 
     # start TLS for security
     s.starttls()
@@ -30,7 +30,7 @@ def send_mail(msg=None):
 
     # sending the mail
 
-    s.sendmail(message['From'], email, message.as_string())
+    s.sendmail(message["From"], email, message.as_string())
 
     # terminating the session
 

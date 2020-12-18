@@ -24,11 +24,17 @@ def get_non_reserved_dates():
 
     :return: List of non reserved dates object
     """
-    wait_for_page_load('passholder_reservations__calendar__day', 'class')
+    wait_for_page_load("passholder_reservations__calendar__day", "class")
 
-    date_all = driver.find_elements_by_class_name('passholder_reservations__calendar__day')
-    date_dis = driver.find_elements_by_class_name('passholder_reservations__calendar__day--disabled')
-    date_exp = driver.find_elements_by_class_name('passholder_reservations__calendar__day--expired')
+    date_all = driver.find_elements_by_class_name(
+        "passholder_reservations__calendar__day"
+    )
+    date_dis = driver.find_elements_by_class_name(
+        "passholder_reservations__calendar__day--disabled"
+    )
+    date_exp = driver.find_elements_by_class_name(
+        "passholder_reservations__calendar__day--expired"
+    )
     non_reserved_dates = set(date_all) - set(date_dis) - set(date_exp)
     non_reserved_dates = list(non_reserved_dates)
     print(non_reserved_dates)
@@ -67,14 +73,14 @@ def login_to_portal(user_id, password):
     Enter
     :return:
     """
-    wait_for_page_load('txtUserName_3', 'id', 15)
+    wait_for_page_load("txtUserName_3", "id", 15)
     sleep(1)
 
-    username_box = driver.find_element_by_id('txtUserName_3')
+    username_box = driver.find_element_by_id("txtUserName_3")
     username_box.send_keys(user_id)
     print("Email Id entered")
 
-    password_box = driver.find_element_by_id('txtPassword_3')
+    password_box = driver.find_element_by_id("txtPassword_3")
     password_box.send_keys(password)
     print("Password entered")
 
@@ -87,14 +93,22 @@ def get_resort_availability_calendar(resort_name):
     :param resort_name:
     :return:
     """
-    wait_for_page_load('//*[@id="PassHolderReservationComponent_Resort_Selection"]', 'xpath')
+    wait_for_page_load(
+        '//*[@id="PassHolderReservationComponent_Resort_Selection"]', "xpath"
+    )
     # TODO : Need to fetch resort name and id from config file.
     # Here option[10] if for heavenly resort. Need to make it parameterized.
-    park_city = driver.find_element_by_xpath('//*[@id="PassHolderReservationComponent_Resort_Selection"]/option[' + str(config.RESORT_ID_DICT[resort_name]) + ']')
+    park_city = driver.find_element_by_xpath(
+        '//*[@id="PassHolderReservationComponent_Resort_Selection"]/option['
+        + str(config.RESORT_ID_DICT[resort_name])
+        + "]"
+    )
     park_city.click()
 
     # Here we will click check availability button.
-    check_avail = driver.find_element_by_xpath('//*[@id="passHolderReservationsSearchButton"]')
+    check_avail = driver.find_element_by_xpath(
+        '//*[@id="passHolderReservationsSearchButton"]'
+    )
     check_avail.click()
 
 
@@ -103,7 +117,9 @@ def change_calendar_to_next_month():
 
     :return:
     """
-    nxt = driver.find_element_by_class_name('passholder_reservations__calendar__arrow--right')
+    nxt = driver.find_element_by_class_name(
+        "passholder_reservations__calendar__arrow--right"
+    )
     nxt.click()
 
 
@@ -115,12 +131,15 @@ def get_next_n_days_for_current_month(no_of_days):
     # Get timezone object of defined timezone.
     timezn = timezone(config.TIMEZONE)
     current_datetime = str(datetime.now(timezn))
-    full_date = current_datetime.split(' ')[0]
-    year, month, current_date = full_date.split('-')
+    full_date = current_datetime.split(" ")[0]
+    year, month, current_date = full_date.split("-")
     _, total_days = monthrange(int(year), int(month))
     # from getting total days of the month we will find next n days.
-    next_days_from_today = [int(current_date.split('-')[-1]) + i for i in range(no_of_days) if
-                            int(current_date.split('-')[-1]) + i < total_days]
+    next_days_from_today = [
+        int(current_date.split("-")[-1]) + i
+        for i in range(no_of_days)
+        if int(current_date.split("-")[-1]) + i < total_days
+    ]
 
     # This condition is to tackle up month change condition.
     # TODO: Need to test the code and can change implementation .
@@ -144,10 +163,14 @@ def book_for_the_date(date_obj, date):
     # Click on that date in calander.
     driver.execute_script("arguments[0].click();", date_obj)
 
-    wait_for_page_load('passholder_reservations__assign_passholder_modal__name', 'class')
+    wait_for_page_load(
+        "passholder_reservations__assign_passholder_modal__name", "class"
+    )
     # sleep(5)
     # Fetch all persons class
-    person_selector = driver.find_elements_by_class_name('passholder_reservations__assign_passholder_modal__name')
+    person_selector = driver.find_elements_by_class_name(
+        "passholder_reservations__assign_passholder_modal__name"
+    )
 
     # For each person do the selection mentioned in person_list.
     for person in person_selector:
@@ -157,16 +180,25 @@ def book_for_the_date(date_obj, date):
     try:
         # After selecting all persons, click on submit button.
         x = driver.find_element_by_xpath(
-            '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/div[3]/button[2]')
+            '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/div[3]/button[2]'
+        )
         driver.execute_script("arguments[0].click();", x)
 
         # If there is already done then close the pop up else return True where it can't find Error element.
-        wait_for_page_load('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/ul/li[3]/span/label/h4/i', 'xpath', delay=2)
-        driver.find_element_by_xpath('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/ul/li[3]/span/label/h4/i')
+        wait_for_page_load(
+            '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/ul/li[3]/span/label/h4/i',
+            "xpath",
+            delay=2,
+        )
+        driver.find_element_by_xpath(
+            '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[2]/div/ul/li[3]/span/label/h4/i'
+        )
     except Exception as e:
         print("Available on " + str(date_obj.text))
         return True
-    close = driver.find_element_by_xpath('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[1]/button')
+    close = driver.find_element_by_xpath(
+        '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[1]/button'
+    )
     driver.execute_script("arguments[0].click();", close)
     return False
 
@@ -181,15 +213,16 @@ def wait_for_page_load(element_to_check, parameter, delay=DELAY):
     try:
 
         element_present = None
-        if parameter == 'xpath':
+        if parameter == "xpath":
             element_present = EC.presence_of_element_located(
-                (By.XPATH, element_to_check))
-        elif parameter == 'id':
+                (By.XPATH, element_to_check)
+            )
+        elif parameter == "id":
+            element_present = EC.presence_of_element_located((By.ID, element_to_check))
+        elif parameter == "class":
             element_present = EC.presence_of_element_located(
-                (By.ID, element_to_check))
-        elif parameter == 'class':
-            element_present = EC.presence_of_element_located(
-                (By.CLASS_NAME, element_to_check))
+                (By.CLASS_NAME, element_to_check)
+            )
         WebDriverWait(driver, delay).until(element_present)
     except TimeoutException as e:
         print("Internet Delay")
@@ -232,10 +265,16 @@ def main():
                     booked_days.append(cal_date)
 
         try:
-            wait_for_page_load('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[2]/div[2]/div[2]', 'xpath', delay=2)
+            wait_for_page_load(
+                '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[2]/div[2]/div[2]',
+                "xpath",
+                delay=2,
+            )
 
             # This will tick the terms & conditions button.
-            tnc = driver.find_element_by_xpath('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[2]/div[2]/div[2]')
+            tnc = driver.find_element_by_xpath(
+                '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[2]/div[2]/div[2]'
+            )
             driver.execute_script("arguments[0].click();", tnc)
             tnc.click()
             # This sleep is temporary
@@ -244,10 +283,10 @@ def main():
 
             # This code will click complete button.
             # TODO : Test this.
-            '''
+            """
             complete = driver.find_element_by_xpath('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[3]/button')
             driver.execute_script("arguments[0].click();", complete)
-            '''
+            """
         except Exception as e:
             print("All days are already reserved")
     driver.close()
