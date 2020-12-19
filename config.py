@@ -2,7 +2,7 @@ import os
 
 NEXT_NO_OF_DAYS = int(os.environ.get("NEXT_NO_OF_DAYS", "7"))
 PERSONS_LIST = str(os.environ.get("NAMES_FOR_BOOKING", "CYNTHIA MCMULLEN,MASON BARRETT")).split(",")
-RESORT_LIST = str(os.environ.get("RESORTS", "BRECKENRIDGE,PARK CITY")).split(",")
+RESORT = str(os.environ.get("RESORTS", "BRECKENRIDGE"))
 EMAIL_ID = str(os.environ.get("EPIC_PASS_ID", "mason.pmb@gmail.com"))
 PASSWORD = str(os.environ.get("EPIC_PASS_PASSWORD", "upworkTEST2020!"))
 TIMEZONE = str(os.environ.get("TIMEZONE", "MST"))

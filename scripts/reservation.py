@@ -305,79 +305,79 @@ def main():
     user = config.EMAIL_ID
     password = config.PASSWORD
 
-    driver = open_web_link(web_link=config.WEB_LINK, browser=False)
+    driver = open_web_link(web_link=config.WEB_LINK, browser=True)
 
     login_to_portal(user_id=user, password=password)
 
     # For Each mountain resort we will book pass for given days.
-    for resort in config.RESORT_LIST:
-        get_resort_availability_calendar(resort_name=resort)
-        print("Calendar Opened")
+    resort = config.RESORT
+    get_resort_availability_calendar(resort_name=resort)
+    print("Calendar Opened")
 
-        non_reserved_dates = get_non_reserved_dates()
+    non_reserved_dates = get_non_reserved_dates()
 
-        next_days_from_today = get_next_n_days_for_current_month(
-            non_reserved_dates, config.NEXT_NO_OF_DAYS
+    next_days_from_today = get_next_n_days_for_current_month(
+        non_reserved_dates, config.NEXT_NO_OF_DAYS
+    )
+
+    # sort_non_reserved_dates(non_reserved_dates)
+
+    booked_days = []
+    print(non_reserved_dates)
+    next_month_flag = True
+    count = 0
+    while next_month_flag:
+        count += 1
+        for i in non_reserved_dates:
+            print(i.text)
+            cal_date = int(i.text)
+            if cal_date in next_days_from_today:
+                status = book_for_the_date(i, cal_date)
+                if status:
+                    # save the booked days
+                    # TODO : Implement proper DS to store info.
+                    booked_days.append(cal_date)
+            elif cal_date > max(next_days_from_today):
+                break
+        if len(next_days_from_today) < config.NEXT_NO_OF_DAYS and count <= 2:
+            change_calendar_month("next")
+            print("Changing the next month")
+            non_reserved_dates = get_non_reserved_dates()
+            current_len = len(next_days_from_today)
+            next_days_from_today = []
+            for i in range(1, config.NEXT_NO_OF_DAYS + 1 - current_len):
+                next_days_from_today.append(i)
+        else:
+            next_month_flag = False
+
+    try:
+        wait_for_page_load(
+            '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[2]/div[2]/div[2]',
+            "xpath",
+            delay=2,
         )
 
-        # sort_non_reserved_dates(non_reserved_dates)
+        # This will tick the terms & conditions button.
+        tnc = driver.find_element_by_xpath(
+            '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[2]/div[2]/div[2]'
+        )
+        # sleep(10)
+        driver.execute_script("arguments[0].click();", tnc)
+        tnc.click()
+        print("checked the terms and condition button")
+        # This sleep is temporary
+        # TODO : Remove this sleep call.
+        # sleep(15)
 
-        booked_days = []
-        print(non_reserved_dates)
-        next_month_flag = True
-        count = 0
-        while next_month_flag:
-            count += 1
-            for i in non_reserved_dates:
-                print(i.text)
-                cal_date = int(i.text)
-                if cal_date in next_days_from_today:
-                    status = book_for_the_date(i, cal_date)
-                    if status:
-                        # save the booked days
-                        # TODO : Implement proper DS to store info.
-                        booked_days.append(cal_date)
-                elif cal_date > max(next_days_from_today):
-                    break
-            if len(next_days_from_today) < config.NEXT_NO_OF_DAYS and count <= 2:
-                change_calendar_month("next")
-                print("Changing the next month")
-                non_reserved_dates = get_non_reserved_dates()
-                current_len = len(next_days_from_today)
-                next_days_from_today = []
-                for i in range(1, config.NEXT_NO_OF_DAYS + 1 - current_len):
-                    next_days_from_today.append(i)
-            else:
-                next_month_flag = False
-
-        try:
-            wait_for_page_load(
-                '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[2]/div[2]/div[2]',
-                "xpath",
-                delay=2,
-            )
-
-            # This will tick the terms & conditions button.
-            tnc = driver.find_element_by_xpath(
-                '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[2]/div[2]/div[2]'
-            )
-            # sleep(10)
-            driver.execute_script("arguments[0].click();", tnc)
-            tnc.click()
-            print("checked the terms and condition button")
-            # This sleep is temporary
-            # TODO : Remove this sleep call.
-            # sleep(15)
-
-            # This code will click complete button.
-            # TODO : Test this.
-            """
-            complete = driver.find_element_by_xpath('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[3]/button')
-            driver.execute_script("arguments[0].click();", complete)
-            """
-        except Exception as e:
-            print(e)
-            print("All days are already reserved")
+        # This code will click complete button.
+        # TODO : Test this.
+        """
+        complete = driver.find_element_by_xpath('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[3]/button')
+        driver.execute_script("arguments[0].click();", complete)
+        """
+    except Exception as e:
+        print(e)
+        print("All days are already reserved")
     driver.close()
     driver.quit()
 
