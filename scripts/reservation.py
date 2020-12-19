@@ -60,6 +60,7 @@ def open_web_link(web_link, browser=False):
     option.add_argument("--headless")
     option.add_argument("--no-sandbox")
     option.add_argument("--disable-dev-sh-usage")
+    option.add_argument("--example-flag")
     # option.add_argument("window-size=1200x600")
     if browser:
         # This will open browser.
