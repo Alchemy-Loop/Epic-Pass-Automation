@@ -1,18 +1,11 @@
 import os
 
-# Get from environment vars, os.environ.get()
-os.environ.get()
-os.environ.get()
-os.environ.get()
-os.environ.get()
-# Also add email id, password, env vars.
-# We can use SendGrid for emails.
-NEXT_NO_OF_DAYS = 7
-PERSONS_LIST = ["CYNTHIA MCMULLEN", "MASON BARRETT"]
-RESORT_LIST = ["BRECKENRIDGE"]
-EMAIL_ID = "mason.pmb@gmail.com"
-PASSWORD = "upworkTEST2020!"
-TIMEZONE = "MST"
+NEXT_NO_OF_DAYS = int(os.environ.get("NEXT_NO_OF_DAYS", "7"))
+PERSONS_LIST = str(os.environ.get("NAMES_FOR_BOOKING", "CYNTHIA MCMULLEN,MASON BARRETT")).split(",")
+RESORT_LIST = str(os.environ.get("RESORTS", "BRECKENRIDGE,PARK CITY")).split(",")
+EMAIL_ID = str(os.environ.get("EPIC_PASS_ID", "mason.pmb@gmail.com"))
+PASSWORD = str(os.environ.get("EPIC_PASS_PASSWORD", "upworkTEST2020!"))
+TIMEZONE = str(os.environ.get("TIMEZONE", "MST"))
 WEB_LINK = (
     "https://www.epicpass.com/Plan-Your-Trip/Lift-Access/Reservations?reservation=true"
 )
