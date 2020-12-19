@@ -1,9 +1,13 @@
 import os
 
-# Get from environment vars, os.environ.get() # Todo: @meet
+# Get from environment vars, os.environ.get()
+os.environ.get()
+os.environ.get()
+os.environ.get()
+os.environ.get()
 # Also add email id, password, env vars.
 # We can use SendGrid for emails.
-NEXT_NO_OF_DAYS = 5
+NEXT_NO_OF_DAYS = 7
 PERSONS_LIST = ["CYNTHIA MCMULLEN", "MASON BARRETT"]
 RESORT_LIST = ["BRECKENRIDGE"]
 EMAIL_ID = "mason.pmb@gmail.com"

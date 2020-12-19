@@ -11,6 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import config
+from utils.utils import time_this
 
 DELAY = 10
 
@@ -29,15 +30,18 @@ def get_non_reserved_dates():
     date_all = driver.find_elements_by_class_name(
         "passholder_reservations__calendar__day"
     )
+    sleep(1)
     date_dis = driver.find_elements_by_class_name(
         "passholder_reservations__calendar__day--disabled"
     )
+    sleep(1)
     date_exp = driver.find_elements_by_class_name(
         "passholder_reservations__calendar__day--expired"
     )
     non_reserved_dates = set(date_all) - set(date_dis) - set(date_exp)
     non_reserved_dates = list(non_reserved_dates)
-    print(non_reserved_dates)
+    print(len(non_reserved_dates))
+    non_reserved_dates = sort_non_reserved_dates(non_reserved_dates)
     return non_reserved_dates
 
 
@@ -73,9 +77,17 @@ def login_to_portal(user_id, password):
     Enter
     :return:
     """
-    wait_for_page_load("txtUserName_3", "id", 15)
+    status = None
+    for _ in range(3):
+        status = wait_for_page_load("txtUserName_3", "id", 100)
+        if status:
+           break
+    # print("status :- " + str(status))
     sleep(1)
 
+    # close_cookies = driver.find_element_by_xpath('//*[@id="onetrust-close-btn-container"]/button')
+
+    print("Web page opened")
     username_box = driver.find_element_by_id("txtUserName_3")
     username_box.send_keys(user_id)
     print("Email Id entered")
@@ -85,6 +97,7 @@ def login_to_portal(user_id, password):
     print("Password entered")
 
     password_box.send_keys(Keys.RETURN)
+    print("signed in")
 
 
 def get_resort_availability_calendar(resort_name):
@@ -94,16 +107,21 @@ def get_resort_availability_calendar(resort_name):
     :return:
     """
     wait_for_page_load(
-        '//*[@id="PassHolderReservationComponent_Resort_Selection"]', "xpath"
+        '//*[@id="PassHolderReservationComponent_Resort_Selection"]/option['
+        + str(config.RESORT_ID_DICT[resort_name])
+        + "]", "xpath"
     )
-    # TODO : Need to fetch resort name and id from config file.
-    # Here option[10] if for heavenly resort. Need to make it parameterized.
-    park_city = driver.find_element_by_xpath(
+    # sleep(5)
+    close_cookies = driver.find_element_by_class_name('onetrust-close-btn-handler')
+    driver.execute_script("arguments[0].click();", close_cookies)
+    resort = driver.find_element_by_xpath(
         '//*[@id="PassHolderReservationComponent_Resort_Selection"]/option['
         + str(config.RESORT_ID_DICT[resort_name])
         + "]"
     )
-    park_city.click()
+    resort.click()
+
+    print("Resort " + str(resort_name) + " selected")
 
     # Here we will click check availability button.
     check_avail = driver.find_element_by_xpath(
@@ -112,18 +130,23 @@ def get_resort_availability_calendar(resort_name):
     check_avail.click()
 
 
-def change_calendar_to_next_month():
+def change_calendar_month(term):
     """
 
     :return:
     """
-    nxt = driver.find_element_by_class_name(
-        "passholder_reservations__calendar__arrow--right"
-    )
-    nxt.click()
+    if term == 'next':
+        nxt = driver.find_element_by_class_name(
+            "passholder_reservations__calendar__arrow--right"
+        )
+        nxt.click()
+    elif term == 'previous':
+        nxt = driver.find_element_by_class_name(
+            "passholder_reservations__calendar__arrow--left"
+        )
+        nxt.click()
 
-
-def get_next_n_days_for_current_month(no_of_days):
+def get_next_n_days_for_current_month(non_reserved_dates,no_of_days):
     """
     This function will return next no_of_days days from current days with defined timezone.
     :return:
@@ -135,20 +158,20 @@ def get_next_n_days_for_current_month(no_of_days):
     year, month, current_date = full_date.split("-")
     _, total_days = monthrange(int(year), int(month))
     # from getting total days of the month we will find next n days.
-    next_days_from_today = [
-        int(current_date.split("-")[-1]) + i
-        for i in range(no_of_days)
-        if int(current_date.split("-")[-1]) + i < total_days
-    ]
+    day = int(current_date.split('-')[-1])
+    next_days_from_today = [day + i for i in range(no_of_days) if
+                                  day + i <= total_days]
+    # driver.find_element_by_xpath('//@id')
 
     # This condition is to tackle up month change condition.
     # TODO: Need to test the code and can change implementation .
-    if len(next_days_from_today) < no_of_days:
-        change_calendar_to_next_month()
-        sleep(5)
-        non_reserved_dates.extend(get_non_reserved_dates())  # TODO: Error in this
-        for i in range(1, config.NEXT_NO_OF_DAYS + 1 - len(next_days_from_today)):
-            next_days_from_today.append(i)
+    # if len(next_days_from_today) < no_of_days:
+    #     change_calendar_month('next')
+    #     sleep(5)
+    #     non_reserved_dates += get_non_reserved_dates()  # TODO: Error in this
+    #     for i in range(1, config.NEXT_NO_OF_DAYS + 1 - len(next_days_from_today)):
+    #         next_days_from_today.append(i)
+    #     change_calendar_month('previous')
     return next_days_from_today
 
 
@@ -166,16 +189,33 @@ def book_for_the_date(date_obj, date):
     wait_for_page_load(
         "passholder_reservations__assign_passholder_modal__name", "class"
     )
-    # sleep(5)
+    sleep(1)
+
+    print("date " + str(date) + " clicked")
     # Fetch all persons class
     person_selector = driver.find_elements_by_class_name(
         "passholder_reservations__assign_passholder_modal__name"
     )
 
+    unselectable_persons = driver.find_elements_by_class_name('passholder_reservations__assign_passholder_modal__unselectable')
+    unselectable_persons_list = []
+    for person in unselectable_persons:
+        unselectable_persons_list.append(person.text.split('\n')[0])
+
     # For each person do the selection mentioned in person_list.
     for person in person_selector:
         if person.text in config.PERSONS_LIST:
-            person.click()
+            if person.text in unselectable_persons_list:
+                close = driver.find_element_by_xpath(
+                    '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[1]/button'
+                )
+                driver.execute_script("arguments[0].click();", close)
+                print("person not clickable closing...")
+                return False
+            driver.execute_script("arguments[0].click();", person)
+            # person.click()
+            sleep(0.5)
+            print("Person " + str(person.text) + " selected")
 
     try:
         # After selecting all persons, click on submit button.
@@ -195,11 +235,13 @@ def book_for_the_date(date_obj, date):
         )
     except Exception as e:
         print("Available on " + str(date_obj.text))
+        print("Assigned pass for this date")
         return True
     close = driver.find_element_by_xpath(
         '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[1]/button'
     )
     driver.execute_script("arguments[0].click();", close)
+    print("Not eligible for pass closing...")
     return False
 
 
@@ -226,8 +268,23 @@ def wait_for_page_load(element_to_check, parameter, delay=DELAY):
         WebDriverWait(driver, delay).until(element_present)
     except TimeoutException as e:
         print("Internet Delay")
+        return False
 
 
+def sort_non_reserved_dates(non_reserved_dates):
+    date_list = []
+    non_reserved_dates_sorted = []
+    for i in non_reserved_dates:
+        date_list.append((i,int(i.text)))
+
+    date_list = sorted(date_list, key=lambda x: x[1])
+    for obj in date_list:
+        non_reserved_dates_sorted.append(obj[0])
+    return non_reserved_dates_sorted
+
+
+
+@time_this()
 def main():
     """
     ------------------------------------------------------
@@ -241,28 +298,48 @@ def main():
     user = config.EMAIL_ID
     password = config.PASSWORD
 
-    driver = open_web_link(web_link=config.WEB_LINK, browser=True)
+    driver = open_web_link(web_link=config.WEB_LINK, browser=False)
 
     login_to_portal(user_id=user, password=password)
 
     # For Each mountain resort we will book pass for given days.
     for resort in config.RESORT_LIST:
         get_resort_availability_calendar(resort_name=resort)
+        print("Calendar Opened")
 
         non_reserved_dates = get_non_reserved_dates()
 
-        next_days_from_today = get_next_n_days_for_current_month(config.NEXT_NO_OF_DAYS)
+        next_days_from_today = get_next_n_days_for_current_month(non_reserved_dates,config.NEXT_NO_OF_DAYS)
+
+        # sort_non_reserved_dates(non_reserved_dates)
 
         booked_days = []
         print(non_reserved_dates)
-        for i in non_reserved_dates:
-            cal_date = int(i.text)
-            if cal_date in next_days_from_today:
-                status = book_for_the_date(i, cal_date)
-                if status:
-                    # save the booked days
-                    # TODO : Implement proper DS to store info.
-                    booked_days.append(cal_date)
+        next_month_flag = True
+        count = 0
+        while(next_month_flag):
+            count += 1
+            for i in non_reserved_dates:
+                print(i.text)
+                cal_date = int(i.text)
+                if cal_date in next_days_from_today:
+                    status = book_for_the_date(i, cal_date)
+                    if status:
+                        # save the booked days
+                        # TODO : Implement proper DS to store info.
+                        booked_days.append(cal_date)
+                elif cal_date > max(next_days_from_today):
+                    break
+            if len(next_days_from_today) < config.NEXT_NO_OF_DAYS and count <= 2:
+                change_calendar_month('next')
+                print("Changing the next month")
+                non_reserved_dates = get_non_reserved_dates()
+                current_len = len(next_days_from_today)
+                next_days_from_today = []
+                for i in range(1, config.NEXT_NO_OF_DAYS + 1 - current_len):
+                    next_days_from_today.append(i)
+            else:
+                next_month_flag = False
 
         try:
             wait_for_page_load(
@@ -275,11 +352,13 @@ def main():
             tnc = driver.find_element_by_xpath(
                 '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[2]/div[2]/div[2]'
             )
+            # sleep(10)
             driver.execute_script("arguments[0].click();", tnc)
             tnc.click()
+            print("checked the terms and condition button")
             # This sleep is temporary
             # TODO : Remove this sleep call.
-            sleep(15)
+            # sleep(15)
 
             # This code will click complete button.
             # TODO : Test this.
@@ -288,6 +367,7 @@ def main():
             driver.execute_script("arguments[0].click();", complete)
             """
         except Exception as e:
+            print(e)
             print("All days are already reserved")
     driver.close()
     driver.quit()
