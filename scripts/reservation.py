@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-import config
+import config, os
 from utils.utils import time_this
 
 DELAY = 10
@@ -53,18 +53,22 @@ def open_web_link(web_link, browser=False):
     :return: This function will return driver object for further use
     """
     global driver
+
     option = Options()
+    option.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
+
     option.add_argument("--headless")
     option.add_argument("--no-sandbox")
     option.add_argument("--disable-dev-sh-usage")
-
     # option.add_argument("window-size=1200x600")
     if browser:
         # This will open browser.
         driver = webdriver.Chrome(ChromeDriverManager().install())
     else:
         # If we want to hide browser then need to add option object with --headless in below argument.
-        driver = webdriver.Chrome(ChromeDriverManager().install(), options=option)
+        driver = webdriver.Chrome(
+            executable_path=os.environ.get("CHROMEDRIVER_PATH"), options=option
+        )
     driver.get(web_link)
     return driver
 
@@ -81,7 +85,7 @@ def login_to_portal(user_id, password):
     for _ in range(3):
         status = wait_for_page_load("txtUserName_3", "id", 100)
         if status:
-           break
+            break
     # print("status :- " + str(status))
     sleep(1)
 
@@ -109,10 +113,11 @@ def get_resort_availability_calendar(resort_name):
     wait_for_page_load(
         '//*[@id="PassHolderReservationComponent_Resort_Selection"]/option['
         + str(config.RESORT_ID_DICT[resort_name])
-        + "]", "xpath"
+        + "]",
+        "xpath",
     )
     # sleep(5)
-    close_cookies = driver.find_element_by_class_name('onetrust-close-btn-handler')
+    close_cookies = driver.find_element_by_class_name("onetrust-close-btn-handler")
     driver.execute_script("arguments[0].click();", close_cookies)
     resort = driver.find_element_by_xpath(
         '//*[@id="PassHolderReservationComponent_Resort_Selection"]/option['
@@ -135,18 +140,19 @@ def change_calendar_month(term):
 
     :return:
     """
-    if term == 'next':
+    if term == "next":
         nxt = driver.find_element_by_class_name(
             "passholder_reservations__calendar__arrow--right"
         )
         nxt.click()
-    elif term == 'previous':
+    elif term == "previous":
         nxt = driver.find_element_by_class_name(
             "passholder_reservations__calendar__arrow--left"
         )
         nxt.click()
 
-def get_next_n_days_for_current_month(non_reserved_dates,no_of_days):
+
+def get_next_n_days_for_current_month(non_reserved_dates, no_of_days):
     """
     This function will return next no_of_days days from current days with defined timezone.
     :return:
@@ -158,9 +164,8 @@ def get_next_n_days_for_current_month(non_reserved_dates,no_of_days):
     year, month, current_date = full_date.split("-")
     _, total_days = monthrange(int(year), int(month))
     # from getting total days of the month we will find next n days.
-    day = int(current_date.split('-')[-1])
-    next_days_from_today = [day + i for i in range(no_of_days) if
-                                  day + i <= total_days]
+    day = int(current_date.split("-")[-1])
+    next_days_from_today = [day + i for i in range(no_of_days) if day + i <= total_days]
     # driver.find_element_by_xpath('//@id')
 
     # This condition is to tackle up month change condition.
@@ -197,10 +202,12 @@ def book_for_the_date(date_obj, date):
         "passholder_reservations__assign_passholder_modal__name"
     )
 
-    unselectable_persons = driver.find_elements_by_class_name('passholder_reservations__assign_passholder_modal__unselectable')
+    unselectable_persons = driver.find_elements_by_class_name(
+        "passholder_reservations__assign_passholder_modal__unselectable"
+    )
     unselectable_persons_list = []
     for person in unselectable_persons:
-        unselectable_persons_list.append(person.text.split('\n')[0])
+        unselectable_persons_list.append(person.text.split("\n")[0])
 
     # For each person do the selection mentioned in person_list.
     for person in person_selector:
@@ -275,13 +282,12 @@ def sort_non_reserved_dates(non_reserved_dates):
     date_list = []
     non_reserved_dates_sorted = []
     for i in non_reserved_dates:
-        date_list.append((i,int(i.text)))
+        date_list.append((i, int(i.text)))
 
     date_list = sorted(date_list, key=lambda x: x[1])
     for obj in date_list:
         non_reserved_dates_sorted.append(obj[0])
     return non_reserved_dates_sorted
-
 
 
 @time_this()
@@ -309,7 +315,9 @@ def main():
 
         non_reserved_dates = get_non_reserved_dates()
 
-        next_days_from_today = get_next_n_days_for_current_month(non_reserved_dates,config.NEXT_NO_OF_DAYS)
+        next_days_from_today = get_next_n_days_for_current_month(
+            non_reserved_dates, config.NEXT_NO_OF_DAYS
+        )
 
         # sort_non_reserved_dates(non_reserved_dates)
 
@@ -317,7 +325,7 @@ def main():
         print(non_reserved_dates)
         next_month_flag = True
         count = 0
-        while(next_month_flag):
+        while next_month_flag:
             count += 1
             for i in non_reserved_dates:
                 print(i.text)
@@ -331,7 +339,7 @@ def main():
                 elif cal_date > max(next_days_from_today):
                     break
             if len(next_days_from_today) < config.NEXT_NO_OF_DAYS and count <= 2:
-                change_calendar_month('next')
+                change_calendar_month("next")
                 print("Changing the next month")
                 non_reserved_dates = get_non_reserved_dates()
                 current_len = len(next_days_from_today)
