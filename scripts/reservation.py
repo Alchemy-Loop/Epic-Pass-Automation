@@ -83,15 +83,8 @@ def login_to_portal(user_id, password):
     Enter
     :return:
     """
-    status = None
-    for _ in range(3):
-        status = wait_for_page_load("txtUserName_3", "id", 100)
-        if status:
-            break
-    # print("status :- " + str(status))
-    sleep(1)
 
-    # close_cookies = driver.find_element_by_xpath('//*[@id="onetrust-close-btn-container"]/button')
+    wait_for_page_load("txtPassword_3", "id", )
 
     print("Web page opened")
     username_box = driver.find_element_by_id("txtUserName_3")
@@ -268,19 +261,18 @@ def wait_for_page_load(element_to_check, parameter, delay=DELAY):
 
         element_present = None
         if parameter == "xpath":
-            element_present = EC.presence_of_element_located(
+            element_present = EC.visibility_of_element_located(
                 (By.XPATH, element_to_check)
             )
         elif parameter == "id":
-            element_present = EC.presence_of_element_located((By.ID, element_to_check))
+            element_present = EC.visibility_of_element_located((By.ID, element_to_check))
         elif parameter == "class":
-            element_present = EC.presence_of_element_located(
+            element_present = EC.visibility_of_element_located(
                 (By.CLASS_NAME, element_to_check)
             )
         WebDriverWait(driver, delay).until(element_present)
     except TimeoutException as e:
         print("Internet Delay")
-        return False
 
 
 def sort_non_reserved_dates(non_reserved_dates):
@@ -296,7 +288,7 @@ def sort_non_reserved_dates(non_reserved_dates):
 
 
 @time_this()
-def main():
+def pass_reservation():
     """
     ------------------------------------------------------
     Starting Of Code.
@@ -343,7 +335,6 @@ def main():
                 status = book_for_the_date(i, cal_date)
                 if status:
                     # save the booked days
-                    # TODO : Implement proper DS to store info.
                     booked_days.append(cal_date)
             elif cal_date > max(next_days_from_today):
                 break
@@ -373,21 +364,19 @@ def main():
         driver.execute_script("arguments[0].click();", tnc)
         tnc.click()
         print("checked the terms and condition button")
-        # This sleep is temporary
-        # TODO : Remove this sleep call.
-        # sleep(15)
 
         # This code will click complete button.
-        # TODO : Test this.
-        """
-        complete = driver.find_element_by_xpath('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[3]/button')
-        driver.execute_script("arguments[0].click();", complete)
-        """
+        # complete = driver.find_element_by_xpath('//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[6]/div[3]/button')
+        # driver.execute_script("arguments[0].click();", complete)
+        driver.close()
+        driver.quit()
+        return True
     except Exception as e:
         print(e)
         print("All days are already reserved")
-    driver.close()
-    driver.quit()
+        driver.close()
+        driver.quit()
+        return False
 
 
-main()
+# main()
