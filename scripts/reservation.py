@@ -330,7 +330,8 @@ def pass_reservation():
                 cal_date = int(i.text)
             except Exception as e:
                 print("Exception in fetching text:",e)
-                continue
+                # continue
+                raise e
             if cal_date in next_days_from_today:
                 status = book_for_the_date(i, cal_date)
                 if status:
