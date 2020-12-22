@@ -53,22 +53,23 @@ def open_web_link(web_link, browser=False):
     :return: This function will return driver object for further use
     """
     global driver
-
+    prefs = {"profile.managed_default_content_settings.images": 2}
     option = Options()
-    option.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
+    # option.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
+    option.add_experimental_option("prefs", prefs)
 
-    option.add_argument("--headless")
-    option.add_argument("--no-sandbox")
-    option.add_argument("--disable-dev-shm-usage")
-    option.add_argument("--example-flag")
     # option.add_argument("window-size=1200x600")
     if browser:
         # This will open browser.
-        driver = webdriver.Chrome(ChromeDriverManager().install())
+        driver = webdriver.Chrome(ChromeDriverManager().install(), options=option)
     else:
         # If we want to hide browser then need to add option object with --headless in below argument.
+        option.add_argument("--headless")
+        option.add_argument("--no-sandbox")
+        option.add_argument("--disable-dev-shm-usage")
+        option.add_argument("--example-flag")
         driver = webdriver.Chrome(
-            executable_path=os.environ.get("CHROMEDRIVER_PATH"), options=option
+            ChromeDriverManager().install(), options=option
         )
     driver.get(web_link)
     return driver
@@ -118,8 +119,11 @@ def get_resort_availability_calendar(resort_name):
         "xpath",
     )
     # sleep(5)
-    close_cookies = driver.find_element_by_class_name("onetrust-close-btn-handler")
-    driver.execute_script("arguments[0].click();", close_cookies)
+    try:
+        close_cookies = driver.find_element_by_class_name("onetrust-close-btn-handler")
+        driver.execute_script("arguments[0].click();", close_cookies)
+    except Exception as e:
+        print("Exception in closing privacy settings", e)
     resort = driver.find_element_by_xpath(
         '//*[@id="PassHolderReservationComponent_Resort_Selection"]/option['
         + str(config.RESORT_ID_DICT[resort_name])
@@ -329,8 +333,12 @@ def main():
     while next_month_flag:
         count += 1
         for i in non_reserved_dates:
-            print(i.text)
-            cal_date = int(i.text)
+            try:
+                print(i.text)
+                cal_date = int(i.text)
+            except Exception as e:
+                print("Exception in fetching text:",e)
+                continue
             if cal_date in next_days_from_today:
                 status = book_for_the_date(i, cal_date)
                 if status:
