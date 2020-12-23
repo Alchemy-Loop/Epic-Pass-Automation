@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-import config, os
+import config, os,constants
 from utils.utils import time_this
 
 DELAY = 10
@@ -209,7 +209,7 @@ def book_for_the_date(date_obj, date):
 
     # For each person do the selection mentioned in person_list.
     for person in person_selector:
-        if person.text in config.PERSONS_LIST:
+        if person.text in constants.PERSONS_LIST:
             if person.text in unselectable_persons_list:
                 close = driver.find_element_by_xpath(
                     '//*[@id="passHolderReservations__wrapper"]/div[3]/div[2]/div[2]/div[1]/div[1]/button'
@@ -298,22 +298,22 @@ def pass_reservation():
     """
 
     # Take Credentials of users from config document
-    user = config.EMAIL_ID
-    password = config.PASSWORD
+    user = constants.EMAIL_ID
+    password = constants.PASSWORD
 
     driver = open_web_link(web_link=config.WEB_LINK, browser=True)
 
     login_to_portal(user_id=user, password=password)
 
     # For Each mountain resort we will book pass for given days.
-    resort = config.RESORT
+    resort = constants.RESORT
     get_resort_availability_calendar(resort_name=resort)
     print("Calendar Opened")
 
     non_reserved_dates = get_non_reserved_dates()
 
     next_days_from_today = get_next_n_days_for_current_month(
-        non_reserved_dates, config.NEXT_NO_OF_DAYS
+        non_reserved_dates, constants.NEXT_NO_OF_DAYS
     )
 
     # sort_non_reserved_dates(non_reserved_dates)
@@ -339,13 +339,13 @@ def pass_reservation():
                     booked_days.append(cal_date)
             elif cal_date > max(next_days_from_today):
                 break
-        if len(next_days_from_today) < config.NEXT_NO_OF_DAYS and count <= 2:
+        if len(next_days_from_today) < constants.NEXT_NO_OF_DAYS and count <= 2:
             change_calendar_month("next")
             print("Changing the next month")
             non_reserved_dates = get_non_reserved_dates()
             current_len = len(next_days_from_today)
             next_days_from_today = []
-            for i in range(1, config.NEXT_NO_OF_DAYS + 1 - current_len):
+            for i in range(1, constants.NEXT_NO_OF_DAYS + 1 - current_len):
                 next_days_from_today.append(i)
         else:
             next_month_flag = False
