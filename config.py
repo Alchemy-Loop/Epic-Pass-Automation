@@ -1,5 +1,5 @@
 
-RESORT = "AFTON ALPS"
+RESORT = "PARK CITY"
 EMAIL_ID = "mason.pmb@gmail.com"
 PASSWORD = "upworkTEST2020!"
 NEXT_NO_OF_DAYS = 7
