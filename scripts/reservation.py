@@ -330,7 +330,7 @@ def pass_reservation():
                     booked_days.append(cal_date)
             elif cal_date > max(next_days_from_today):
                 break
-        if len(next_days_from_today) < config.NEXT_NO_OF_DAYS and count <= 2:
+        if len(next_days_from_today) < config.NEXT_NO_OF_DAYS and count == 1:
             change_calendar_month("next")
             print("Changing the next month")
             non_reserved_dates = get_non_reserved_dates()
